@@ -1,0 +1,243 @@
+/* ── Reset & base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red:    #e2000f;
+  --red-dk: #b5000c;
+  --red-lt: #ffeaea;
+  --gray:   #f4f4f4;
+  --border: #e0e0e0;
+  --text:   #1a1a1a;
+  --muted:  #666;
+  --white:  #ffffff;
+  --radius: 12px;
+  --shadow: 0 2px 8px rgba(0,0,0,.08);
+  --nav-h:  56px;
+}
+
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--gray);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
+}
+
+/* ── Typography ───────────────────────────────────────────── */
+h1 { font-size: 1.4rem; font-weight: 700; }
+h2 { font-size: 1.05rem; font-weight: 600; }
+h3 { font-size: .95rem; font-weight: 600; }
+p  { font-size: .9rem; color: var(--muted); line-height: 1.5; }
+small, .hint { font-size: .78rem; color: var(--muted); }
+code { font-size: .8rem; background: #f0f0f0; padding: .1rem .35rem; border-radius: 4px; }
+
+/* ── Layout ───────────────────────────────────────────────── */
+.page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 1rem 1rem 1.5rem;
+}
+
+/* ── Top navbar ───────────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--nav-h);
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  gap: .75rem;
+}
+.navbar .brand { font-weight: 700; font-size: 1.05rem; color: var(--red); flex: 1; }
+.navbar a, .navbar button.nav-btn {
+  color: var(--muted); font-size: .85rem; text-decoration: none;
+  background: none; border: none; cursor: pointer; padding: .4rem .6rem;
+  border-radius: 8px;
+}
+.navbar a:hover, .navbar button.nav-btn:hover { background: var(--gray); color: var(--red); }
+.back-btn {
+  display: flex; align-items: center; gap: .3rem;
+  color: var(--red); font-size: .9rem; text-decoration: none; font-weight: 500;
+}
+
+/* ── Cards ────────────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+  margin-bottom: .75rem;
+}
+.card h3 { margin-bottom: .3rem; }
+.card p  { margin-bottom: .75rem; }
+
+/* ── Grid de colecciones ──────────────────────────────────── */
+.collections-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 400px) {
+  .collections-grid { grid-template-columns: 1fr; }
+}
+@media (min-width: 600px) {
+  .collections-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── Lista de recetas (collection detail) ─────────────────── */
+.recipe-list { list-style: none; margin-bottom: 1rem; }
+.recipe-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: .85rem 1rem;
+  margin-bottom: .5rem;
+}
+.recipe-item .recipe-info { flex: 1; min-width: 0; }
+.recipe-item .recipe-name { font-weight: 600; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recipe-item .recipe-meta { font-size: .78rem; color: var(--muted); margin-top: .1rem; }
+
+/* ── Botones ──────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  padding: .65rem 1.1rem;
+  border-radius: 10px;
+  font-size: .9rem; font-weight: 600;
+  border: none; cursor: pointer;
+  text-decoration: none;
+  transition: background .15s, transform .1s;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--red); color: var(--white); }
+.btn-primary:hover { background: var(--red-dk); }
+.btn-full { width: 100%; }
+.btn-outline { background: none; border: 1.5px solid var(--red); color: var(--red); }
+.btn-outline:hover { background: var(--red-lt); }
+.btn-ghost  { background: none; border: 1.5px solid var(--border); color: var(--muted); font-size: .82rem; min-height: 36px; padding: .4rem .7rem; }
+.btn-ghost:hover { border-color: var(--red); color: var(--red); }
+.btn-danger { background: none; border: none; color: var(--red); font-size: .82rem; cursor: pointer; padding: .4rem; min-height: 36px; }
+.btn-danger:hover { text-decoration: underline; }
+
+/* ── Formularios ──────────────────────────────────────────── */
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-size: .85rem; font-weight: 500; color: var(--text); margin-bottom: .35rem; }
+.form-group .required { color: var(--red); }
+
+input[type=text], input[type=email], input[type=password],
+input[type=number], textarea, select {
+  width: 100%;
+  padding: .7rem .85rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: var(--white);
+  color: var(--text);
+  transition: border-color .15s;
+  -webkit-appearance: none;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(226,0,15,.1);
+}
+textarea { resize: vertical; min-height: 72px; }
+input[type=number] { -moz-appearance: textfield; }
+
+.input-row { display: flex; gap: .5rem; }
+.input-row input { flex: 1; }
+.input-number-sm { width: 80px !important; flex: none !important; }
+
+/* ── Dynamic items (ingredientes/pasos) ───────────────────── */
+.dynamic-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: .75rem; }
+.dynamic-item { display: flex; gap: .5rem; align-items: flex-start; }
+.dynamic-item input, .dynamic-item textarea { flex: 1; }
+
+/* ── Time grid ────────────────────────────────────────────── */
+.time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 420px) {
+  .time-grid { grid-template-columns: 1fr; }
+}
+.time-inputs { display: flex; gap: .5rem; margin-top: .35rem; }
+.time-inputs > div { flex: 1; }
+.time-inputs input { text-align: center; }
+
+/* ── Alerts ───────────────────────────────────────────────── */
+.alert {
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  font-size: .88rem;
+  margin-bottom: 1rem;
+  display: flex; align-items: flex-start; gap: .5rem;
+}
+.alert-success { background: #e8f8e8; border: 1px solid #a3d9a3; color: #2a7a2a; }
+.alert-error   { background: var(--red-lt); border: 1px solid #f5a3a3; color: #a00; }
+
+/* ── Section card ─────────────────────────────────────────── */
+.section-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.1rem;
+  margin-bottom: 1rem;
+}
+.section-card h2 {
+  margin-bottom: .75rem;
+  padding-bottom: .5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Login page ───────────────────────────────────────────── */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--gray);
+}
+.login-card {
+  background: var(--white);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.1);
+  padding: 2rem 1.75rem;
+  width: 100%;
+  max-width: 380px;
+}
+.login-logo { text-align: center; margin-bottom: 1.5rem; }
+.login-logo span { font-size: 2.5rem; }
+.login-logo h1 { font-size: 1.3rem; color: var(--red); margin-top: .35rem; }
+
+/* ── Empty state ──────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--muted);
+}
+.empty-state span { font-size: 2.5rem; display: block; margin-bottom: .5rem; }
+
+/* ── Section title row ────────────────────────────────────── */
+.section-title {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: .75rem;
+}
+
+/* ── PWA safe area ────────────────────────────────────────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  body { padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + .5rem); }
+}

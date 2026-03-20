@@ -1,5 +1,6 @@
-.claude
 .env
+.claude/
+.idea/
 __pycache__/
 *.pyc
-.idea/
+main.py

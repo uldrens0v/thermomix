@@ -2,101 +2,89 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#e2000f">
+  <link rel="manifest" href="/static/manifest.json">
   <title>{{ collection.name }} – Cookidoo</title>
-  <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 1.5rem; background: #f5f5f5; }
-    a.back { color: #e2000f; text-decoration: none; font-size: .9rem; }
-    h1 { color: #e2000f; margin: .5rem 0 1.5rem; }
-    .msg   { background: #e6f9e6; border: 1px solid #a3d9a3; padding: .6rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
-    .error { background: #ffeaea; border: 1px solid #f5a3a3; padding: .6rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); margin-bottom: 2rem; }
-    th { background: #e2000f; color: white; text-align: left; padding: .6rem 1rem; font-size: .85rem; }
-    td { padding: .6rem 1rem; border-bottom: 1px solid #f0f0f0; font-size: .9rem; }
-    tr:last-child td { border-bottom: none; }
-    .del-btn { background: none; border: none; color: #e2000f; cursor: pointer; font-size: .85rem; padding: 0; }
-    .del-btn:hover { text-decoration: underline; }
-    section { background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.1); padding: 1.25rem; margin-bottom: 1.5rem; }
-    section h2 { margin: 0 0 .75rem; font-size: 1rem; }
-    .row { display: flex; gap: .5rem; flex-wrap: wrap; }
-    input[type=text], input[type=number] { padding: .5rem; border: 1px solid #ccc; border-radius: 4px; }
-    input[type=text] { flex: 1; min-width: 150px; }
-    input[type=number] { width: 80px; }
-    button { padding: .5rem 1rem; background: #e2000f; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background: #b5000c; }
-    small { color: #999; font-size: .8rem; }
-  </style>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <a class="back" href="/dashboard">← Volver a mis listas</a>
-  <h1>📋 {{ collection.name }}</h1>
 
-  {% if msg %}
-    <div class="msg">{{ msg }}</div>
-  {% endif %}
-  {% if error %}
-    <div class="error">{{ error }}</div>
-  {% endif %}
+  <nav class="navbar">
+    <a href="/dashboard" class="back-btn">← Volver</a>
+    <span class="brand" style="font-size:.95rem;">{{ collection.name }}</span>
+  </nav>
 
-  <!-- Tabla de recetas -->
-  {% set total = namespace(n=0) %}
-  {% for ch in collection.chapters %}{% set total.n = total.n + ch.recipes|length %}{% endfor %}
+  <div class="page">
 
-  {% if total.n > 0 %}
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Tiempo</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for chapter in collection.chapters %}
-        {% for r in chapter.recipes %}
-        <tr>
-          <td><code>{{ r.id }}</code></td>
-          <td>{{ r.name }}</td>
-          <td>{{ (r.total_time // 60) }} min</td>
-          <td>
-            <form method="post" action="/collections/{{ collection.id }}/remove-recipe" style="display:inline">
+    {% if msg %}
+      <div class="alert alert-success">✓ {{ msg }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="alert alert-error">⚠ {{ error }}</div>
+    {% endif %}
+
+    <!-- Lista de recetas -->
+    {% set total = namespace(n=0) %}
+    {% for ch in collection.chapters %}{% set total.n = total.n + ch.recipes|length %}{% endfor %}
+
+    {% if total.n > 0 %}
+      <ul class="recipe-list">
+        {% for chapter in collection.chapters %}
+          {% for r in chapter.recipes %}
+          <li class="recipe-item">
+            <div class="recipe-info">
+              <div class="recipe-name">{{ r.name }}</div>
+              <div class="recipe-meta">
+                <code>{{ r.id }}</code>
+                {% if r.total_time %} · {{ r.total_time // 60 }} min{% endif %}
+              </div>
+            </div>
+            <form method="post" action="/collections/{{ collection.id }}/remove-recipe">
               <input type="hidden" name="recipe_id" value="{{ r.id }}">
-              <button class="del-btn" type="submit" onclick="return confirm('¿Eliminar {{ r.name }}?')">Eliminar</button>
+              <button class="btn-danger" type="submit"
+                onclick="return confirm('¿Eliminar {{ r.name }}?')">🗑</button>
             </form>
-          </td>
-        </tr>
+          </li>
+          {% endfor %}
         {% endfor %}
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p style="color:#999">Esta lista no tiene recetas todavía.</p>
-  {% endif %}
-
-  <!-- Añadir receta por ID -->
-  <section>
-    <h2>➕ Añadir receta a esta lista</h2>
-    <p><small>Introduce el ID de la receta desde la URL de Cookidoo:<br>
-    <code>cookidoo.es/recipes/recipe/es-ES/<strong>r792539</strong></code> → escribe <strong>r792539</strong> (o solo <strong>792539</strong>)</small></p>
-    <form method="post" action="/collections/{{ collection.id }}/add-recipe">
-      <div class="row">
-        <input type="text" name="recipe_id" placeholder="Ej: r792539 o 792539" required>
-        <button type="submit">Añadir</button>
+      </ul>
+    {% else %}
+      <div class="empty-state">
+        <span>🥗</span>
+        <p>Esta lista no tiene recetas todavía.</p>
       </div>
-    </form>
-  </section>
+    {% endif %}
 
-  <!-- Crear receta personalizada -->
-  <section>
-    <h2>🍴 Crear receta personalizada desde receta oficial</h2>
-    <p><small>Crea una copia personalizable de una receta oficial (requiere suscripción activa)</small></p>
-    <form method="post" action="/collections/{{ collection.id }}/create-custom">
-      <div class="row">
-        <input type="text" name="base_recipe_id" placeholder="ID base (ej: r792539)" required>
-        <input type="number" name="serving_size" value="4" min="1" max="20" title="Raciones">
-        <button type="submit">Crear</button>
-      </div>
-    </form>
-  </section>
+    <!-- Añadir receta por ID -->
+    <div class="section-card">
+      <h2>➕ Añadir receta</h2>
+      <p style="margin-bottom:.75rem;">
+        Copia el ID desde la URL de Cookidoo:<br>
+        <code>…/es-ES/<strong>r792539</strong></code>
+      </p>
+      <form method="post" action="/collections/{{ collection.id }}/add-recipe">
+        <div class="input-row">
+          <input type="text" name="recipe_id" placeholder="r792539 o 792539" required>
+          <button type="submit" class="btn btn-primary">Añadir</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Crear copia personalizada -->
+    <div class="section-card">
+      <h2>🍴 Clonar receta oficial</h2>
+      <p style="margin-bottom:.75rem;">Crea una copia editable de una receta oficial.</p>
+      <form method="post" action="/collections/{{ collection.id }}/create-custom">
+        <div class="input-row">
+          <input type="text" name="base_recipe_id" placeholder="ID base (ej: r792539)" required>
+          <input type="number" name="serving_size" value="4" min="1" max="20"
+            class="input-number-sm" title="Raciones">
+          <button type="submit" class="btn btn-primary">Clonar</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
 </body>
 </html>

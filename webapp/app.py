@@ -1,14 +1,29 @@
 import uuid
 from contextlib import asynccontextmanager
-from typing import Optional
+from pathlib import Path
+from typing import Annotated, Optional
 
 import aiohttp
 from fastapi import Cookie, FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from cookidoo_api import Cookidoo, CookidooConfig
+from cookidoo_api.const import ADD_CUSTOM_RECIPE_PATH
 from cookidoo_api.exceptions import CookidooAuthException, CookidooRequestException
+
+
+def to_iso_duration(hours: int, minutes: int) -> str:
+    """Convierte horas y minutos a duración ISO 8601 (ej: PT1H30M)."""
+    if hours == 0 and minutes == 0:
+        return "PT0S"
+    parts = "PT"
+    if hours:
+        parts += f"{hours}H"
+    if minutes:
+        parts += f"{minutes}M"
+    return parts
 
 # session_id -> {"api": Cookidoo, "http_session": aiohttp.ClientSession}
 user_sessions: dict = {}
@@ -21,8 +36,11 @@ async def lifespan(app: FastAPI):
         await s["http_session"].close()
 
 
+BASE_DIR = Path(__file__).parent
+
 app = FastAPI(lifespan=lifespan)
-templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
 def get_session(session_id: Optional[str]) -> Optional[dict]:
@@ -202,6 +220,85 @@ async def create_custom_recipe(
         )
 
 
+# ── Nueva receta personalizada desde cero ─────────────────────────────────────
+
+@app.get("/recipes/new", response_class=HTMLResponse)
+async def new_recipe_form(request: Request, session_id: Optional[str] = Cookie(None)):
+    sess = get_session(session_id)
+    if not sess:
+        return RedirectResponse("/")
+    return templates.TemplateResponse(
+        "new_recipe.html", {"request": request, "error": request.query_params.get("error")}
+    )
+
+
+@app.post("/recipes/new")
+async def new_recipe_submit(
+    request: Request,
+    titulo: str = Form(...),
+    raciones: int = Form(...),
+    prep_horas: int = Form(0),
+    prep_minutos: int = Form(0),
+    total_horas: int = Form(0),
+    total_minutos: int = Form(0),
+    ingredientes: Annotated[list[str], Form()] = [],
+    pasos: Annotated[list[str], Form()] = [],
+    session_id: Optional[str] = Cookie(None),
+):
+    sess = get_session(session_id)
+    if not sess:
+        return RedirectResponse("/")
+
+    api: Cookidoo = sess["api"]
+
+    # Filtrar vacíos
+    ingredientes = [i.strip() for i in ingredientes if i.strip()]
+    pasos = [p.strip() for p in pasos if p.strip()]
+
+    prep_seg = (prep_horas * 3600) + (prep_minutos * 60)
+    total_seg = (total_horas * 3600) + (total_minutos * 60)
+    cook_seg = max(0, total_seg - prep_seg)
+
+    base_url = api.api_endpoint / ADD_CUSTOM_RECIPE_PATH.format(**api._cfg.localization.__dict__)
+    try:
+        # Paso 1: crear stub con nombre y raciones
+        async with api._session.post(
+            base_url, headers=api._api_headers,
+            json={"recipeName": titulo, "servingSize": raciones}
+        ) as r:
+            if r.status == 401:
+                return RedirectResponse("/recipes/new?error=Sesion+expirada")
+            r.raise_for_status()
+            data = await r.json()
+            recipe_id = data["recipeId"]
+
+        # Paso 2: PATCH con contenido completo
+        patch_url = api.api_endpoint / f"created-recipes/{recipe_id}"
+        patch_body = {
+            "name": titulo,
+            "image": None,
+            "isImageOwnedByUser": False,
+            "tools": ["TM6"],
+            "yield": {"value": raciones, "unitText": "portion"},
+            "prepTime": prep_seg or None,
+            "cookTime": cook_seg or None,
+            "totalTime": total_seg or None,
+            "ingredients": [{"type": "INGREDIENT", "text": i} for i in ingredientes],
+            "instructions": [{"type": "STEP", "text": p} for p in pasos],
+            "hints": None,
+            "workStatus": "PRIVATE",
+            "recipeMetadata": {"requiresAnnotationsCheck": False},
+        }
+        async with api._session.patch(
+            patch_url, headers=api._api_headers, json=patch_body
+        ) as r:
+            r.raise_for_status()
+
+        return RedirectResponse(f"/dashboard?msg=Receta+creada+correctamente", status_code=302)
+    except Exception as e:
+        return RedirectResponse(f"/recipes/new?error=Error+al+crear+receta:+{e}", status_code=302)
+
+
 # ── Eliminar receta de colección ───────────────────────────────────────────────
 
 @app.post("/collections/{collection_id}/remove-recipe")
@@ -227,3 +324,4 @@ async def remove_recipe_from_collection(
             f"/collections/{collection_id}?error=Error+al+eliminar:+{e}",
             status_code=302,
         )
+

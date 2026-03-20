@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#e2000f">
+  <link rel="manifest" href="/static/manifest.json">
+  <title>Nueva receta – Cookidoo</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="/dashboard" class="back-btn">← Volver</a>
+    <span class="brand" style="font-size:.95rem;">Nueva receta</span>
+  </nav>
+
+  <div class="page">
+
+    {% if error %}
+      <div class="alert alert-error">⚠ {{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/recipes/new" id="form">
+
+      <!-- Info básica -->
+      <div class="section-card">
+        <h2>Información básica</h2>
+        <div class="form-group" style="margin-top:.5rem;">
+          <label>Título <span class="required">*</span></label>
+          <input type="text" name="titulo" required placeholder="Ej: Macarrones veganos con tomate">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Raciones <span class="required">*</span></label>
+          <input type="number" name="raciones" required min="1" max="99" value="4"
+            style="width:110px;">
+        </div>
+      </div>
+
+      <!-- Tiempos -->
+      <div class="section-card">
+        <h2>Tiempos</h2>
+        <div class="time-grid" style="margin-top:.5rem;">
+          <div>
+            <label style="font-size:.85rem;font-weight:500;display:block;margin-bottom:.35rem;">
+              Tiempo de preparación
+            </label>
+            <div class="time-inputs">
+              <div>
+                <input type="number" name="prep_horas" min="0" max="23" value="0">
+                <div class="hint" style="text-align:center;">horas</div>
+              </div>
+              <div>
+                <input type="number" name="prep_minutos" min="0" max="59" value="0">
+                <div class="hint" style="text-align:center;">min</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:.85rem;font-weight:500;display:block;margin-bottom:.35rem;">
+              Tiempo total
+            </label>
+            <div class="time-inputs">
+              <div>
+                <input type="number" name="total_horas" min="0" max="23" value="0">
+                <div class="hint" style="text-align:center;">horas</div>
+              </div>
+              <div>
+                <input type="number" name="total_minutos" min="0" max="59" value="0">
+                <div class="hint" style="text-align:center;">min</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ingredientes -->
+      <div class="section-card">
+        <h2>Ingredientes <span class="required">*</span></h2>
+        <div class="dynamic-list" id="ingredientes-list" style="margin-top:.5rem;">
+          <div class="dynamic-item">
+            <input type="text" name="ingredientes" placeholder="Ej: 200g de macarrones" required>
+            <button type="button" class="btn btn-ghost" onclick="removeItem(this)">✕</button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline" onclick="addIngrediente()">
+          + Ingrediente
+        </button>
+      </div>
+
+      <!-- Pasos -->
+      <div class="section-card">
+        <h2>Pasos <span class="required">*</span></h2>
+        <div class="dynamic-list" id="pasos-list" style="margin-top:.5rem;">
+          <div class="dynamic-item">
+            <textarea name="pasos" placeholder="Describe el paso..." required></textarea>
+            <button type="button" class="btn btn-ghost" onclick="removeItem(this)">✕</button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline" onclick="addPaso()">
+          + Paso
+        </button>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" style="font-size:1.05rem;">
+        Crear receta
+      </button>
+
+    </form>
+  </div>
+
+  <script>
+    function addIngrediente() {
+      const list = document.getElementById('ingredientes-list');
+      const div = document.createElement('div');
+      div.className = 'dynamic-item';
+      div.innerHTML = `<input type="text" name="ingredientes" placeholder="Ej: 200g de macarrones">
+                       <button type="button" class="btn btn-ghost" onclick="removeItem(this)">✕</button>`;
+      list.appendChild(div);
+      div.querySelector('input').focus();
+    }
+
+    function addPaso() {
+      const list = document.getElementById('pasos-list');
+      const div = document.createElement('div');
+      div.className = 'dynamic-item';
+      div.innerHTML = `<textarea name="pasos" placeholder="Describe el paso..."></textarea>
+                       <button type="button" class="btn btn-ghost" onclick="removeItem(this)">✕</button>`;
+      list.appendChild(div);
+      div.querySelector('textarea').focus();
+    }
+
+    function removeItem(btn) {
+      const list = btn.closest('.dynamic-list');
+      if (list.children.length > 1) btn.closest('.dynamic-item').remove();
+    }
+
+    document.getElementById('form').addEventListener('submit', function(e) {
+      const ings  = [...document.querySelectorAll('[name=ingredientes]')].some(i => i.value.trim());
+      const pasos = [...document.querySelectorAll('[name=pasos]')].some(p => p.value.trim());
+      if (!ings)  { e.preventDefault(); alert('Añade al menos un ingrediente.'); }
+      else if (!pasos) { e.preventDefault(); alert('Añade al menos un paso de preparación.'); }
+    });
+  </script>
+</body>
+</html>

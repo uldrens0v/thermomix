@@ -2,62 +2,66 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Cookidoo – Mis listas</title>
-  <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 1.5rem; background: #f5f5f5; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    h1 { color: #e2000f; margin: 0; }
-    a.logout { color: #666; font-size: .9rem; text-decoration: none; }
-    a.logout:hover { color: #e2000f; }
-    .msg  { background: #e6f9e6; border: 1px solid #a3d9a3; padding: .6rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .col-card { background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.1); padding: 1rem; }
-    .col-card h3 { margin: 0 0 .5rem; font-size: 1rem; }
-    .col-card p  { margin: 0 0 .75rem; font-size: .85rem; color: #666; }
-    .col-card a  { display: inline-block; padding: .35rem .8rem; background: #e2000f; color: white; border-radius: 4px; text-decoration: none; font-size: .85rem; }
-    .col-card a:hover { background: #b5000c; }
-    section.new-col { background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.1); padding: 1.25rem; }
-    section.new-col h2 { margin: 0 0 1rem; font-size: 1rem; }
-    .row { display: flex; gap: .5rem; }
-    input[type=text] { flex: 1; padding: .5rem; border: 1px solid #ccc; border-radius: 4px; }
-    button { padding: .5rem 1rem; background: #e2000f; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background: #b5000c; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#e2000f">
+  <link rel="manifest" href="/static/manifest.json">
+  <title>Mis listas – Cookidoo</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <header>
-    <h1>🍳 Mis listas – Hola, {{ user.username }}</h1>
-    <a class="logout" href="/logout">Cerrar sesión</a>
-  </header>
 
-  {% if msg %}
-    <div class="msg">{{ msg }}</div>
-  {% endif %}
+  <nav class="navbar">
+    <span class="brand">🍳 Cookidoo</span>
+    <span style="font-size:.85rem;color:var(--muted)">{{ user.username }}</span>
+    <a href="/logout">Salir</a>
+  </nav>
 
-  <div class="grid">
-    {% for c in collections %}
-    <div class="col-card">
-      <h3>{{ c.name }}</h3>
-      <p>
+  <div class="page">
+
+    {% if msg %}
+      <div class="alert alert-success">✓ {{ msg }}</div>
+    {% endif %}
+
+    <!-- Botón crear receta -->
+    <a href="/recipes/new" class="btn btn-primary btn-full" style="margin-bottom:1rem;">
+      🍴 Nueva receta personalizada
+    </a>
+
+    <!-- Listas de recetas -->
+    <div class="section-title">
+      <h2>Mis listas</h2>
+    </div>
+
+    <div class="collections-grid">
+      {% for c in collections %}
         {% set total = namespace(n=0) %}
         {% for ch in c.chapters %}{% set total.n = total.n + ch.recipes|length %}{% endfor %}
-        {{ total.n }} receta(s)
-      </p>
-      <a href="/collections/{{ c.id }}">Ver / Editar</a>
+        <a href="/collections/{{ c.id }}" style="text-decoration:none;">
+          <div class="card" style="height:100%;cursor:pointer;">
+            <h3>{{ c.name }}</h3>
+            <p>{{ total.n }} receta{% if total.n != 1 %}s{% endif %}</p>
+            <span style="font-size:.8rem;color:var(--red);font-weight:600;">Ver →</span>
+          </div>
+        </a>
+      {% else %}
+        <div class="empty-state" style="grid-column:1/-1;">
+          <span>📋</span>
+          <p>No tienes listas todavía. ¡Crea una!</p>
+        </div>
+      {% endfor %}
     </div>
-    {% else %}
-    <p>No tienes listas todavía. ¡Crea una!</p>
-    {% endfor %}
-  </div>
 
-  <section class="new-col">
-    <h2>➕ Nueva lista de recetas</h2>
-    <form method="post" action="/collections/new">
-      <div class="row">
-        <input type="text" name="name" placeholder="Nombre de la lista" required>
-        <button type="submit">Crear</button>
-      </div>
-    </form>
-  </section>
+    <!-- Nueva colección -->
+    <div class="section-card" style="margin-top:.5rem;">
+      <h2>➕ Nueva lista</h2>
+      <form method="post" action="/collections/new">
+        <div class="input-row" style="margin-top:.5rem;">
+          <input type="text" name="name" placeholder="Nombre de la lista" required>
+          <button type="submit" class="btn btn-primary">Crear</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
 </body>
 </html>
